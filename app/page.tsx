@@ -70,6 +70,22 @@ const LOCATION_OPTIONS: LocationOption[] = [
     timezone: 'Europe/Paris',
   },
   {
+    id: 'helsinki',
+    label: 'Helsinki',
+    country: 'Finland',
+    latitude: 60.1699,
+    longitude: 24.9384,
+    timezone: 'Europe/Helsinki',
+  },
+  {
+    id: 'amsterdam',
+    label: 'Amsterdam',
+    country: 'Netherlands',
+    latitude: 52.3676,
+    longitude: 4.9041,
+    timezone: 'Europe/Amsterdam',
+  },
+  {
     id: 'tokyo',
     label: 'Tokyo',
     country: 'Japan',

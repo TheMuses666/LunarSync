@@ -12,6 +12,8 @@ const REGION_OPTIONS = [
   { id: 'new-york', label: 'United States / New York', timezone: 'America/New_York' },
   { id: 'san-francisco', label: 'United States / San Francisco', timezone: 'America/Los_Angeles' },
   { id: 'paris', label: 'France / Paris', timezone: 'Europe/Paris' },
+  { id: 'helsinki', label: 'Finland / Helsinki', timezone: 'Europe/Helsinki' },
+  { id: 'amsterdam', label: 'Netherlands / Amsterdam', timezone: 'Europe/Amsterdam' },
   { id: 'tokyo', label: 'Japan / Tokyo', timezone: 'Asia/Tokyo' },
   { id: 'singapore', label: 'Singapore / Singapore', timezone: 'Asia/Singapore' },
   { id: 'sydney', label: 'Australia / Sydney', timezone: 'Australia/Sydney' },
