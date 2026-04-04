@@ -1,22 +1,26 @@
 'use client'
 
 import { useState } from 'react'
+import TermInfoButton from '@/components/TermInfoButton'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { t as tr } from '@/lib/i18n'
+import { formatRegionOption } from '@/lib/locations'
 import { parseDatetimeLocal, normalizeTimeInZone, formatGregorianDate, formatTime } from '@/lib/time'
 import { getBaZiDate } from '@/lib/rules'
-import { getShichen, getShichenRange, getShichenRuleLabel } from '@/lib/shichen'
+import { getShichen, getShichenAnimal, getShichenDescription, getShichenDisplayName, getShichenRange, getShichenRuleLabel } from '@/lib/shichen'
 import { computeLunar } from '@/lib/lunar'
 
 const REGION_OPTIONS = [
-  { id: 'london', label: 'United Kingdom / London', timezone: 'Europe/London' },
-  { id: 'beijing', label: 'China / Beijing', timezone: 'Asia/Shanghai' },
-  { id: 'new-york', label: 'United States / New York', timezone: 'America/New_York' },
-  { id: 'san-francisco', label: 'United States / San Francisco', timezone: 'America/Los_Angeles' },
-  { id: 'paris', label: 'France / Paris', timezone: 'Europe/Paris' },
-  { id: 'helsinki', label: 'Finland / Helsinki', timezone: 'Europe/Helsinki' },
-  { id: 'amsterdam', label: 'Netherlands / Amsterdam', timezone: 'Europe/Amsterdam' },
-  { id: 'tokyo', label: 'Japan / Tokyo', timezone: 'Asia/Tokyo' },
-  { id: 'singapore', label: 'Singapore / Singapore', timezone: 'Asia/Singapore' },
-  { id: 'sydney', label: 'Australia / Sydney', timezone: 'Australia/Sydney' },
+  { id: 'london', city: 'London', country: 'United Kingdom', timezone: 'Europe/London' },
+  { id: 'beijing', city: 'Beijing', country: 'China', timezone: 'Asia/Shanghai' },
+  { id: 'new-york', city: 'New York', country: 'United States', timezone: 'America/New_York' },
+  { id: 'san-francisco', city: 'San Francisco', country: 'United States', timezone: 'America/Los_Angeles' },
+  { id: 'paris', city: 'Paris', country: 'France', timezone: 'Europe/Paris' },
+  { id: 'helsinki', city: 'Helsinki', country: 'Finland', timezone: 'Europe/Helsinki' },
+  { id: 'amsterdam', city: 'Amsterdam', country: 'Netherlands', timezone: 'Europe/Amsterdam' },
+  { id: 'tokyo', city: 'Tokyo', country: 'Japan', timezone: 'Asia/Tokyo' },
+  { id: 'singapore', city: 'Singapore', country: 'Singapore', timezone: 'Asia/Singapore' },
+  { id: 'sydney', city: 'Sydney', country: 'Australia', timezone: 'Australia/Sydney' },
 ]
 
 function toDatetimeLocal(date: Date): string {
@@ -29,6 +33,7 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 
 export default function QueryPage() {
+  const { language } = useLanguage()
   const [inputValue, setInputValue] = useState(() => toDatetimeLocal(new Date()))
   const [regionId, setRegionId] = useState('london')
   const selectedRegion = REGION_OPTIONS.find(region => region.id === regionId) ?? REGION_OPTIONS[0]
@@ -51,7 +56,7 @@ export default function QueryPage() {
       <div className="w-full max-w-2xl flex flex-col gap-5">
         {/* Input panel */}
         <div className="bg-white border border-[#D4D4D4] p-5">
-          <Label>Select Time for Analysis</Label>
+          <Label>{tr(language, 'Select Time for Analysis', '选择分析时间')}</Label>
           <input
             type="datetime-local"
             value={inputValue}
@@ -60,13 +65,13 @@ export default function QueryPage() {
           />
           <div className="mt-4">
             <div className="flex items-center justify-between gap-4">
-              <Label>Region</Label>
+              <Label>{tr(language, 'Region', '地区')}</Label>
               <button
                 type="button"
                 onClick={resetForm}
-                className="border border-[#D4D4D4] px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] text-[#777777] transition-colors hover:text-[#1A1A1A]"
+                className="cursor-pointer border border-[#D4D4D4] px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] text-[#777777] transition-colors hover:text-[#1A1A1A]"
               >
-                Reset
+                {tr(language, 'Reset', '重置')}
               </button>
             </div>
             <select
@@ -76,7 +81,7 @@ export default function QueryPage() {
             >
               {REGION_OPTIONS.map(region => (
                 <option key={region.id} value={region.id}>
-                  {region.label}
+                  {formatRegionOption(language, region.country, region.city)}
                 </option>
               ))}
             </select>
@@ -88,22 +93,41 @@ export default function QueryPage() {
             {/* Gregorian + Traditional side by side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div className="bg-white border border-[#D4D4D4] p-5">
-                <Label>Gregorian Coordinate</Label>
+                <div className="flex items-center gap-2">
+                  <Label>{tr(language, 'Gregorian Coordinate', '公历坐标')}</Label>
+                  <TermInfoButton
+                    title={tr(language, 'Gregorian Coordinate', '公历坐标')}
+                    body={tr(language, 'The standard calendar date and clock time for the selected region.', '所选地区下的标准公历日期与时钟时间。')}
+                    buttonClassName="h-4 w-4 text-[9px]"
+                  />
+                </div>
                 <div className="mt-3 font-serif-display text-3xl">{formatGregorianDate(result.t)}</div>
                 <div className="font-serif-display text-xl text-[#777777]">{formatTime(result.t)}</div>
                 <div className="mt-2 text-[9px] tracking-[0.15em] uppercase text-[#777777]">{result.t.tzLabel}</div>
               </div>
 
               <div className="bg-white border border-[#D4D4D4] p-5">
-                <Label>Traditional Coordinates</Label>
+                <div className="flex items-center gap-2">
+                  <Label>{tr(language, 'Traditional Coordinates', '传统坐标')}</Label>
+                  <TermInfoButton
+                    title={tr(language, 'Traditional Coordinates', '传统坐标')}
+                    body={tr(language, 'The selected moment expressed with the Chinese lunar calendar and shichen system.', '将所选时刻转换为中国农历与时辰体系后的表达。')}
+                    buttonClassName="h-4 w-4 text-[9px]"
+                  />
+                </div>
                 <div className="mt-3 font-serif-display text-2xl leading-snug">
                   {result.lunar.lunarYear}年{' '}
                   {result.lunar.isLeapMonth && <span className="text-[#777777]">闰</span>}
                   {result.lunar.lunarMonth}月{' '}
                   {result.lunar.lunarDay}
                 </div>
-                <div className="mt-1 text-[11px] text-[#777777] tracking-widest uppercase">
-                  {result.shichen.name} ({result.shichen.englishName}) · {getShichenRuleLabel(result.shichen)}
+                <div className="mt-1 flex items-center gap-2 text-[11px] text-[#777777] tracking-widest uppercase">
+                  <span>{getShichenDisplayName(result.shichen, language)} · {getShichenRuleLabel(result.shichen)}</span>
+                  <TermInfoButton
+                    title={`${result.shichen.name} / ${getShichenRuleLabel(result.shichen)}`}
+                    body={tr(language, `${result.shichen.name} is the active double-hour. ${getShichenRuleLabel(result.shichen)} is its rule label.`, `${result.shichen.name} 是当前时辰，${getShichenRuleLabel(result.shichen)} 是它对应的规则编号。`)}
+                    buttonClassName="h-4 w-4 text-[9px]"
+                  />
                 </div>
               </div>
             </div>
@@ -114,13 +138,23 @@ export default function QueryPage() {
                 <div>
                   <div className="flex items-baseline gap-2 mb-1">
                     <span className="font-serif-display text-2xl">{result.shichen.branch}</span>
-                    <span className="text-[9px] tracking-[0.2em] uppercase text-[#777777]">{result.shichen.animal}</span>
+                    <span className="text-[9px] tracking-[0.2em] uppercase text-[#777777]">{getShichenAnimal(result.shichen, language)}</span>
                     <span className="text-[9px] tracking-[0.2em] uppercase text-[#777777]">{getShichenRuleLabel(result.shichen)}</span>
+                    <TermInfoButton
+                      title={tr(language, 'Shichen Rule Number', '时辰规则编号')}
+                      body={tr(language, 'A short rule label like 子1, 酉10, or 戌11.', '例如 子1、酉10、戌11 这样的简短规则编号。')}
+                      buttonClassName="h-4 w-4 text-[9px]"
+                    />
                   </div>
                   <div className="text-[9px] tracking-widest text-[#777777]">{getShichenRange(result.shichen)}</div>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[9px] tracking-widest text-right">
-                  {(['年', '月', '日', '时'] as const).map((label, i) => {
+                  {[
+                    tr(language, 'Year', '年'),
+                    tr(language, 'Month', '月'),
+                    tr(language, 'Day', '日'),
+                    tr(language, 'Hour', '时'),
+                  ].map((label, i) => {
                     const v = [result.lunar.yearGanZhi, result.lunar.monthGanZhi, result.lunar.dayGanZhi, result.lunar.timeGanZhi][i]
                     return (
                       <div key={label} className="contents">
@@ -132,12 +166,12 @@ export default function QueryPage() {
                 </div>
               </div>
               <p className="mt-4 text-[12px] text-[#777777] italic font-serif-display leading-relaxed border-t border-[#EEEEEE] pt-3">
-                {result.shichen.description}
+                {getShichenDescription(result.shichen, language)}
               </p>
             </div>
           </>
         ) : (
-          <div className="text-center text-[#777777] text-sm py-8">Please enter a valid date and time.</div>
+          <div className="text-center text-[#777777] text-sm py-8">{tr(language, 'Please enter a valid date and time.', '请输入有效的日期与时间。')}</div>
         )}
       </div>
     </div>

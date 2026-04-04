@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { t } from '@/lib/i18n'
 
 const NAV_ITEMS = [
-  { href: '/', label: 'Observatory', icon: '◉' },
-  { href: '/query', label: 'Navigator', icon: '⊕' },
-  { href: '/compare', label: 'Compare', icon: '⚙' },
+  { href: '/', labelEn: 'Observatory', labelZh: '观测台', icon: '◉' },
+  { href: '/query', labelEn: 'Navigator', labelZh: '导航器', icon: '⊕' },
+  { href: '/compare', labelEn: 'Compare', labelZh: '对比', icon: '⚙' },
 ]
 
 function isActive(pathname: string, href: string) {
@@ -18,6 +20,7 @@ function isActive(pathname: string, href: string) {
 export default function HeaderNav() {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
+  const { language, setLanguage } = useLanguage()
 
   return (
     <nav className="border-b border-[#D4D4D4] bg-white text-[11px] tracking-widest uppercase">
@@ -26,14 +29,21 @@ export default function HeaderNav() {
           LunarSync
         </div>
         <div className="flex items-center gap-3">
-          <button type="button" className="text-[#777777] transition-colors hover:text-[#1A1A1A] text-base">☽</button>
-          <button type="button" className="text-[#777777] transition-colors hover:text-[#1A1A1A] text-base">◯</button>
           <button
             type="button"
-            aria-label="Toggle navigation menu"
+            onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
+            className="cursor-pointer border border-[#D4D4D4] px-2 py-1 text-[10px] tracking-[0.16em] text-[#777777] transition-colors hover:text-[#1A1A1A]"
+          >
+            {language === 'en' ? '中' : 'EN'}
+          </button>
+          <button type="button" className="cursor-pointer text-[#777777] transition-colors hover:text-[#1A1A1A] text-base">☽</button>
+          <button type="button" className="cursor-pointer text-[#777777] transition-colors hover:text-[#1A1A1A] text-base">◯</button>
+          <button
+            type="button"
+            aria-label={t(language, 'Toggle navigation menu', '切换导航菜单')}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(open => !open)}
-            className="flex h-10 w-10 items-center justify-center border border-[#D4D4D4] text-[#1A1A1A]"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center border border-[#D4D4D4] text-[#1A1A1A]"
           >
             <span className="flex flex-col gap-1">
               <span className="block h-px w-4 bg-current" />
@@ -63,14 +73,14 @@ export default function HeaderNav() {
               >
                 <span className="flex items-center gap-3">
                   <span className="text-[10px]">{item.icon}</span>
-                  {item.label}
+                  {t(language, item.labelEn, item.labelZh)}
                 </span>
                 <span>{active ? '●' : '○'}</span>
               </Link>
             )
           })}
           <div className="px-4 py-3 text-[9px] tracking-[0.15em] text-[#777777]">
-            Main Observatory Dashboard
+            {t(language, 'Main Observatory Dashboard', '主观测面板')}
           </div>
         </div>
       )}
@@ -95,18 +105,25 @@ export default function HeaderNav() {
               ].join(' ')}
             >
               <span className="text-[10px]">{item.icon}</span>
-              {item.label}
+              {t(language, item.labelEn, item.labelZh)}
             </Link>
           )
         })}
 
         <div className="flex-1 flex items-center justify-end px-5 gap-4">
           <span className="text-[#777777] text-[10px] tracking-[0.15em] hidden lg:block">
-            Main Observatory Dashboard
+            {t(language, 'Main Observatory Dashboard', '主观测面板')}
           </span>
           <div className="flex items-center gap-3 text-[#777777]">
-            <button type="button" className="hover:text-[#1A1A1A] transition-colors text-base">☽</button>
-            <button type="button" className="hover:text-[#1A1A1A] transition-colors text-base">◯</button>
+            <button
+              type="button"
+              onClick={() => setLanguage(language === 'en' ? 'zh' : 'en')}
+              className="cursor-pointer border border-[#D4D4D4] px-2 py-1 text-[10px] tracking-[0.16em] text-[#777777] transition-colors hover:text-[#1A1A1A]"
+            >
+              {language === 'en' ? '中' : 'EN'}
+            </button>
+            <button type="button" className="cursor-pointer hover:text-[#1A1A1A] transition-colors text-base">☽</button>
+            <button type="button" className="cursor-pointer hover:text-[#1A1A1A] transition-colors text-base">◯</button>
           </div>
         </div>
       </div>
