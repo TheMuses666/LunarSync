@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { parseDatetimeLocal, normalizeTimeInZone, formatGregorianDate, formatTime } from '@/lib/time'
 import { getBaZiDate } from '@/lib/rules'
-import { getShichen, getShichenRange } from '@/lib/shichen'
+import { getShichen, getShichenRange, getShichenRuleLabel } from '@/lib/shichen'
 import { computeLunar } from '@/lib/lunar'
 
 const ZONES = [
@@ -75,7 +75,7 @@ export default function ComparePage() {
                     {r.lunar.lunarYear}年 {r.lunar.lunarMonth}月 {r.lunar.lunarDay}
                   </div>
                   <div className="text-[10px] text-[#777777] tracking-widest uppercase mt-0.5">
-                    {r.shichen.name} · {r.shichen.englishName}
+                    {r.shichen.name} · {r.shichen.englishName} · {getShichenRuleLabel(r.shichen)}
                   </div>
                 </div>
 
@@ -96,7 +96,7 @@ export default function ComparePage() {
 
                 {/* Shichen indicator */}
                 <div className="flex items-center justify-between text-[9px] text-[#777777]">
-                  <span className="font-serif-display text-lg text-[#1A1A1A]">{r.shichen.branch}</span>
+                  <span className="font-serif-display text-lg text-[#1A1A1A]">{r.shichen.branch}{r.shichen.number}</span>
                   <span className="tracking-wider">{getShichenRange(r.shichen)}</span>
                 </div>
               </div>

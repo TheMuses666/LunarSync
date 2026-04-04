@@ -6,7 +6,7 @@ import ShichenClock from '@/components/ShichenClock'
 import { useMode } from '@/contexts/ModeContext'
 import { getNow, formatGregorianDate, formatTime, normalizeTimeInZone } from '@/lib/time'
 import { getBaZiDate } from '@/lib/rules'
-import { getShichen, getShichenRange } from '@/lib/shichen'
+import { getShichen, getShichenRange, getShichenRuleLabel } from '@/lib/shichen'
 import { computeLunar } from '@/lib/lunar'
 import { calculateSolarNoon } from '@/lib/solar'
 import type { NormalizedTime } from '@/lib/time'
@@ -242,7 +242,7 @@ export default function ObservatoryPage() {
               {lunar.lunarDay}
             </div>
             <div className="mt-2 text-[13px] text-[#777777] tracking-widest uppercase">
-              {shichen.name} ({shichen.englishName})
+              {shichen.name} ({shichen.englishName}) · {getShichenRuleLabel(shichen)}
             </div>
             <div className="mt-4 flex items-center gap-2 text-[9px] tracking-[0.15em] uppercase border border-[#D4D4D4] w-fit px-3 py-1.5 text-[#777777]">
               <span>✓</span> Day Divination Verified
@@ -255,6 +255,7 @@ export default function ObservatoryPage() {
                 <div className="flex items-baseline gap-2">
                   <span className="font-serif-display text-2xl">{shichen.branch}</span>
                   <span className="text-[9px] tracking-[0.2em] uppercase text-[#777777]">{shichen.animal}</span>
+                  <span className="text-[9px] tracking-[0.2em] uppercase text-[#777777]">{getShichenRuleLabel(shichen)}</span>
                 </div>
                 <div className="text-[9px] tracking-[0.12em] text-[#777777] mt-0.5">
                   {getShichenRange(shichen)}

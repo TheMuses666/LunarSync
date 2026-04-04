@@ -3,6 +3,7 @@ export interface Shichen {
   englishName: string   // e.g. "ZI SHI"
   animal: string        // e.g. "RAT"
   branch: string        // e.g. "子"
+  number: number        // 1–12, 子=1 ... 亥=12
   startHour: number     // 23 for 子时
   endHour: number       // 1 for 子时 (exclusive — next 时辰 begins here)
   index: number         // 0–11
@@ -72,7 +73,11 @@ const SHICHEN_DATA: Omit<Shichen, 'index'>[] = [
   },
 ]
 
-export const SHICHEN_LIST: Shichen[] = SHICHEN_DATA.map((s, i) => ({ ...s, index: i }))
+export const SHICHEN_LIST: Shichen[] = SHICHEN_DATA.map((s, i) => ({
+  ...s,
+  number: i + 1,
+  index: i,
+}))
 
 export function getShichen(hour: number): Shichen {
   if (hour === 23 || hour === 0) return SHICHEN_LIST[0]
@@ -83,4 +88,8 @@ export function getShichenRange(shichen: Shichen): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   if (shichen.branch === '子') return '23:00 – 00:59'
   return `${pad(shichen.startHour)}:00 – ${pad(shichen.endHour - 1)}:59`
+}
+
+export function getShichenRuleLabel(shichen: Shichen): string {
+  return `${shichen.branch}${shichen.number}`
 }

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { parseDatetimeLocal, normalizeTimeInZone, formatGregorianDate, formatTime } from '@/lib/time'
 import { getBaZiDate } from '@/lib/rules'
-import { getShichen, getShichenRange } from '@/lib/shichen'
+import { getShichen, getShichenRange, getShichenRuleLabel } from '@/lib/shichen'
 import { computeLunar } from '@/lib/lunar'
 
 const REGION_OPTIONS = [
@@ -103,7 +103,7 @@ export default function QueryPage() {
                   {result.lunar.lunarDay}
                 </div>
                 <div className="mt-1 text-[11px] text-[#777777] tracking-widest uppercase">
-                  {result.shichen.name} ({result.shichen.englishName})
+                  {result.shichen.name} ({result.shichen.englishName}) · {getShichenRuleLabel(result.shichen)}
                 </div>
               </div>
             </div>
@@ -115,6 +115,7 @@ export default function QueryPage() {
                   <div className="flex items-baseline gap-2 mb-1">
                     <span className="font-serif-display text-2xl">{result.shichen.branch}</span>
                     <span className="text-[9px] tracking-[0.2em] uppercase text-[#777777]">{result.shichen.animal}</span>
+                    <span className="text-[9px] tracking-[0.2em] uppercase text-[#777777]">{getShichenRuleLabel(result.shichen)}</span>
                   </div>
                   <div className="text-[9px] tracking-widest text-[#777777]">{getShichenRange(result.shichen)}</div>
                 </div>
