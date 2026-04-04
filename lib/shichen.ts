@@ -12,7 +12,7 @@ export interface Shichen {
   descriptionZh: string
 }
 
-const SHICHEN_DATA: Omit<Shichen, 'index'>[] = [
+const SHICHEN_DATA: Omit<Shichen, 'index' | 'number'>[] = [
   {
     name: '子时', englishName: 'ZI SHI', animal: 'RAT', animalZh: '鼠', branch: '子',
     startHour: 23, endHour: 1,
