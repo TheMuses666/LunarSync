@@ -1,14 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import ModeToggle from '@/components/ModeToggle'
+import SearchableRegionSelect from '@/components/SearchableRegionSelect'
 import ShichenClock from '@/components/ShichenClock'
 import TermInfoButton from '@/components/TermInfoButton'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { useMode } from '@/contexts/ModeContext'
 import { t as tr } from '@/lib/i18n'
-import { formatLocationDisplay, formatRegionOption } from '@/lib/locations'
-import { getNow, formatGregorianDate, formatTime, normalizeTimeInZone } from '@/lib/time'
+import { formatLocationDisplay } from '@/lib/locations'
+import { REGION_OPTIONS } from '@/lib/regions'
+import { formatGregorianDate, formatTime, normalizeTimeInZone } from '@/lib/time'
 import { getBaZiDate } from '@/lib/rules'
 import { getShichen, getShichenAnimal, getShichenDescription, getShichenDisplayName, getShichenRange, getShichenRuleLabel } from '@/lib/shichen'
 import { computeLunar } from '@/lib/lunar'
@@ -23,102 +23,8 @@ interface TimeData {
   lunar: LunarResult
 }
 
-interface LocationOption {
-  id: string
-  label: string
-  country: string
-  latitude?: number
-  longitude?: number
-  timezone: string
-}
-
-const LOCATION_OPTIONS: LocationOption[] = [
-  {
-    id: 'london',
-    label: 'London',
-    country: 'United Kingdom',
-    latitude: 51.5072,
-    longitude: -0.1276,
-    timezone: 'Europe/London',
-  },
-  {
-    id: 'beijing',
-    label: 'Beijing',
-    country: 'China',
-    latitude: 39.9042,
-    longitude: 116.4074,
-    timezone: 'Asia/Shanghai',
-  },
-  {
-    id: 'new-york',
-    label: 'New York',
-    country: 'United States',
-    latitude: 40.7128,
-    longitude: -74.006,
-    timezone: 'America/New_York',
-  },
-  {
-    id: 'san-francisco',
-    label: 'San Francisco',
-    country: 'United States',
-    latitude: 37.7749,
-    longitude: -122.4194,
-    timezone: 'America/Los_Angeles',
-  },
-  {
-    id: 'paris',
-    label: 'Paris',
-    country: 'France',
-    latitude: 48.8566,
-    longitude: 2.3522,
-    timezone: 'Europe/Paris',
-  },
-  {
-    id: 'helsinki',
-    label: 'Helsinki',
-    country: 'Finland',
-    latitude: 60.1699,
-    longitude: 24.9384,
-    timezone: 'Europe/Helsinki',
-  },
-  {
-    id: 'amsterdam',
-    label: 'Amsterdam',
-    country: 'Netherlands',
-    latitude: 52.3676,
-    longitude: 4.9041,
-    timezone: 'Europe/Amsterdam',
-  },
-  {
-    id: 'tokyo',
-    label: 'Tokyo',
-    country: 'Japan',
-    latitude: 35.6762,
-    longitude: 139.6503,
-    timezone: 'Asia/Tokyo',
-  },
-  {
-    id: 'singapore',
-    label: 'Singapore',
-    country: 'Singapore',
-    latitude: 1.3521,
-    longitude: 103.8198,
-    timezone: 'Asia/Singapore',
-  },
-  {
-    id: 'sydney',
-    label: 'Sydney',
-    country: 'Australia',
-    latitude: -33.8688,
-    longitude: 151.2093,
-    timezone: 'Australia/Sydney',
-  },
-]
-
-function recompute(mode: 'beijing' | 'local', localTimezone?: string): TimeData {
-  const t = mode === 'local' && localTimezone
-    ? normalizeTimeInZone(new Date(), localTimezone, localTimezone)
-    : getNow(mode)
+function recompute(timezone: string): TimeData {
+  const t = normalizeTimeInZone(new Date(), timezone, timezone)
   const baziDate = getBaZiDate(t)
   const shichen = getShichen(t.hour)
   const lunar = computeLunar(baziDate, t)
@@ -143,11 +49,10 @@ function Panel({ children, className = '' }: { children: React.ReactNode; classN
 
 export default function ObservatoryPage() {
   const { language } = useLanguage()
-  const { mode } = useMode()
   const [locationId, setLocationId] = useState('london')
-  const selectedLocation = LOCATION_OPTIONS.find(option => option.id === locationId) ?? LOCATION_OPTIONS[0]
-  const beijingLocation = LOCATION_OPTIONS.find(option => option.id === 'beijing') ?? LOCATION_OPTIONS[0]
-  const effectiveLocation = mode === 'beijing' ? beijingLocation : selectedLocation
+  const [hoveredShichen, setHoveredShichen] = useState<Shichen | null>(null)
+  const [selectedShichen, setSelectedShichen] = useState<Shichen | null>(null)
+  const selectedLocation = REGION_OPTIONS.find(option => option.id === locationId) ?? REGION_OPTIONS[0]
   const [, setTick] = useState(() => Date.now())
 
   useEffect(() => {
@@ -155,32 +60,30 @@ export default function ObservatoryPage() {
     return () => clearInterval(id)
   }, [])
 
-  const data = recompute(mode, effectiveLocation.timezone)
+  const data = recompute(selectedLocation.timezone)
   const { t, shichen, lunar } = data
-  const locationTime = normalizeTimeInZone(new Date(), effectiveLocation.timezone)
+  const displayShichen = hoveredShichen ?? selectedShichen ?? shichen
+  const locationTime = normalizeTimeInZone(new Date(), selectedLocation.timezone)
   const solarNoon = calculateSolarNoon(
-    effectiveLocation.longitude ?? 0,
+    selectedLocation.longitude ?? 0,
     new Date(),
     locationTime.tzOffset
   )
-  const locationDisplay = formatLocationDisplay(language, effectiveLocation.label, effectiveLocation.country)
-  const coordinateLine = `${effectiveLocation.latitude?.toFixed(2)}°, ${effectiveLocation.longitude?.toFixed(2)}°`
-  const shichenDisplayName = getShichenDisplayName(shichen, language)
-  const shichenAnimal = getShichenAnimal(shichen, language)
-  const shichenDescription = getShichenDescription(shichen, language)
-
-  const tzLine = mode === 'beijing'
-    ? tr(language, 'CST (UTC+8)', '北京时间 (UTC+8)')
-    : effectiveLocation.timezone
+  const locationDisplay = formatLocationDisplay(language, selectedLocation.city, selectedLocation.country)
+  const coordinateLine = `${selectedLocation.latitude?.toFixed(2)}°, ${selectedLocation.longitude?.toFixed(2)}°`
+  const shichenDisplayName = getShichenDisplayName(displayShichen, language)
+  const shichenAnimal = getShichenAnimal(displayShichen, language)
+  const shichenDescription = getShichenDescription(displayShichen, language)
+  const tzLine = selectedLocation.timezone
+  const isPreviewing = displayShichen.index !== shichen.index
+  const previewLabel = hoveredShichen
+    ? tr(language, 'Previewing selected sector', '正在预览所指时辰')
+    : selectedShichen
+      ? tr(language, 'Locked to selected sector', '已锁定所选时辰')
+      : tr(language, 'Live current shichen', '当前实时所在时辰')
 
   return (
     <div className="min-h-[calc(100vh-41px)] flex flex-col items-center justify-center py-10 px-6">
-      <div className="mb-12 flex w-full justify-center">
-        <div className="w-full max-w-[620px] flex justify-center">
-          <ModeToggle />
-        </div>
-      </div>
-
       <div className="flex w-full max-w-[1850px] flex-col items-center justify-center gap-0 lg:flex-row lg:items-center lg:justify-center lg:gap-3">
         <div className="flex w-full max-w-[980px] flex-col justify-center gap-4 lg:max-w-[400px]">
           <Panel>
@@ -223,22 +126,16 @@ export default function ObservatoryPage() {
             <div className="mt-3 border-t border-[#EEEEEE] pt-3">
               <label className="flex items-center justify-between gap-4">
                 <span className="text-[9px] tracking-[0.2em] uppercase text-[#777777]">{tr(language, 'Region', '地区')}</span>
-                <select
+                <SearchableRegionSelect
+                  options={REGION_OPTIONS}
                   value={locationId}
-                  onChange={event => setLocationId(event.target.value)}
-                  disabled={mode === 'beijing'}
-                  className="min-w-[180px] border border-[#D4D4D4] bg-white px-3 py-2 text-[11px] tracking-[0.12em] uppercase text-[#1A1A1A] outline-none"
-                >
-                  {LOCATION_OPTIONS.map(option => (
-                    <option key={option.id} value={option.id}>
-                      {formatRegionOption(language, option.country, option.label)}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setLocationId}
+                  className="min-w-[220px]"
+                />
               </label>
             </div>
             <div className="mt-3 text-[9px] tracking-[0.18em] uppercase text-[#777777]">
-              {coordinateLine} / {effectiveLocation.timezone}
+              {coordinateLine} / {selectedLocation.timezone}
             </div>
           </Panel>
         </div>
@@ -250,6 +147,11 @@ export default function ObservatoryPage() {
               minute={t.minute}
               second={t.second}
               shichen={shichen}
+              interactiveShichen={displayShichen}
+              onHoverShichen={setHoveredShichen}
+              onSelectShichen={(nextShichen) => {
+                setSelectedShichen(current => current?.index === nextShichen.index ? null : nextShichen)
+              }}
             />
           </div>
         </div>
@@ -271,12 +173,24 @@ export default function ObservatoryPage() {
               {lunar.lunarDay}
             </div>
             <div className="mt-2 flex items-center gap-2 text-[13px] text-[#777777] tracking-widest uppercase">
-              <span>{shichenDisplayName} · {getShichenRuleLabel(shichen)}</span>
+              <span>{shichenDisplayName} · {getShichenRuleLabel(displayShichen)}</span>
               <TermInfoButton
-                title={`${shichen.name} / ${getShichenRuleLabel(shichen)}`}
-                body={tr(language, `${shichen.name} is the current Chinese double-hour. ${getShichenRuleLabel(shichen)} is its rule label.`, `${shichen.name} 是当前时辰，${getShichenRuleLabel(shichen)} 是它对应的规则编号。`)}
+                title={`${displayShichen.name} / ${getShichenRuleLabel(displayShichen)}`}
+                body={tr(language, `${displayShichen.name} is the current Chinese double-hour. ${getShichenRuleLabel(displayShichen)} is its rule label.`, `${displayShichen.name} 是当前时辰，${getShichenRuleLabel(displayShichen)} 是它对应的规则编号。`)}
                 buttonClassName="h-4 w-4 text-[9px]"
               />
+            </div>
+            <div className="mt-3 text-[9px] tracking-[0.18em] uppercase text-[#777777]">
+              {previewLabel}
+              {selectedShichen && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedShichen(null)}
+                  className="ml-3 cursor-pointer border-b border-[#BBBBBB] text-[#777777] transition-colors hover:text-[#1A1A1A]"
+                >
+                  {tr(language, 'Clear', '清除')}
+                </button>
+              )}
             </div>
             <div className="mt-4 flex items-center gap-2 text-[9px] tracking-[0.15em] uppercase border border-[#D4D4D4] w-fit px-3 py-1.5 text-[#777777]">
               <span>✓</span> {tr(language, 'Day Divination Verified', '日界规则已确认')}
@@ -287,9 +201,9 @@ export default function ObservatoryPage() {
             <div className="flex justify-between items-start mb-3">
               <div>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-serif-display text-2xl">{shichen.branch}</span>
+                  <span className="font-serif-display text-2xl">{displayShichen.branch}</span>
                   <span className="text-[9px] tracking-[0.2em] uppercase text-[#777777]">{shichenAnimal}</span>
-                  <span className="text-[9px] tracking-[0.2em] uppercase text-[#777777]">{getShichenRuleLabel(shichen)}</span>
+                  <span className="text-[9px] tracking-[0.2em] uppercase text-[#777777]">{getShichenRuleLabel(displayShichen)}</span>
                   <TermInfoButton
                     title={tr(language, 'Shichen Rule Number', '时辰规则编号')}
                     body={tr(language, 'A short rule label like 子1, 酉10, or 亥12.', '例如 子1、酉10、亥12 这样的简短规则编号。')}
@@ -297,8 +211,13 @@ export default function ObservatoryPage() {
                   />
                 </div>
                 <div className="text-[9px] tracking-[0.12em] text-[#777777] mt-0.5">
-                  {getShichenRange(shichen)}
+                  {getShichenRange(displayShichen)}
                 </div>
+                {isPreviewing && (
+                  <div className="mt-2 text-[9px] tracking-[0.14em] uppercase text-[#9A938B]">
+                    {tr(language, 'Preview only, pillars stay on the live time', '仅预览时辰说明，四柱仍按当前实时计算')}
+                  </div>
+                )}
               </div>
               <div className="text-right grid grid-cols-2 gap-x-3 gap-y-0.5 text-[9px] tracking-widest text-[#777777] uppercase">
                 <span>{tr(language, 'Year', '年')}</span><span className="text-[#1A1A1A] font-medium">{lunar.yearGanZhi}</span>

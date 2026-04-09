@@ -8,6 +8,14 @@ export const COUNTRY_ZH: Record<string, string> = {
   Japan: '日本',
   Singapore: '新加坡',
   Australia: '澳大利亚',
+  'South Korea': '韩国',
+  'United Arab Emirates': '阿联酋',
+  Germany: '德国',
+  Spain: '西班牙',
+  Italy: '意大利',
+  Switzerland: '瑞士',
+  Canada: '加拿大',
+  'New Zealand': '新西兰',
 }
 
 export const CITY_ZH: Record<string, string> = {
@@ -21,6 +29,16 @@ export const CITY_ZH: Record<string, string> = {
   Tokyo: '东京',
   Singapore: '新加坡',
   Sydney: '悉尼',
+  Seoul: '首尔',
+  'Hong Kong': '香港',
+  Dubai: '迪拜',
+  Berlin: '柏林',
+  Madrid: '马德里',
+  Rome: '罗马',
+  Zurich: '苏黎世',
+  Toronto: '多伦多',
+  Vancouver: '温哥华',
+  Auckland: '奥克兰',
 }
 
 export function getLocalizedCountry(language: 'en' | 'zh', country: string) {

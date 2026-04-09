@@ -1,21 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import SearchableRegionSelect from '@/components/SearchableRegionSelect'
 import TermInfoButton from '@/components/TermInfoButton'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { t as tr } from '@/lib/i18n'
-import { getLocalizedCity } from '@/lib/locations'
+import { formatRegionOption, getLocalizedCity } from '@/lib/locations'
+import { REGION_OPTIONS } from '@/lib/regions'
 import { parseDatetimeLocal, normalizeTimeInZone, formatGregorianDate, formatTime } from '@/lib/time'
 import { getBaZiDate } from '@/lib/rules'
 import { getShichen, getShichenDisplayName, getShichenRange, getShichenRuleLabel } from '@/lib/shichen'
 import { computeLunar } from '@/lib/lunar'
-
-const ZONES = [
-  { label: 'Beijing', tz: 'Asia/Shanghai' },
-  { label: 'Tokyo', tz: 'Asia/Tokyo' },
-  { label: 'London', tz: 'Europe/London' },
-  { label: 'New York', tz: 'America/New_York' },
-] as const
 
 function toDatetimeLocal(date: Date): string {
   const p = (n: number) => String(n).padStart(2, '0')
@@ -28,25 +23,49 @@ function Label({ children }: { children: React.ReactNode }) {
 
 function compareBadgeClass(active: boolean) {
   return active
-    ? 'border-[#1A1A1A] bg-[#F7F3EE] text-[#1A1A1A]'
+    ? 'border-[rgba(26,26,26,0.5)] bg-[#F7F3EE] text-[#1A1A1A]'
     : 'border-[#E8E1D9] bg-[#FBFAF8] text-[#8A8178]'
 }
 
 export default function ComparePage() {
   const { language } = useLanguage()
   const [inputValue, setInputValue] = useState(() => toDatetimeLocal(new Date()))
+  const [selectedZoneIds, setSelectedZoneIds] = useState<string[]>(['beijing', 'tokyo', 'london', 'new-york'])
+  const [pendingZoneId, setPendingZoneId] = useState('san-francisco')
   const [referenceCity, setReferenceCity] = useState('Beijing')
   const date = parseDatetimeLocal(inputValue)
 
-  const results = date ? ZONES.map(({ label, tz }) => {
-    const t = normalizeTimeInZone(date, tz, label)
+  const activeZones = REGION_OPTIONS.filter(zone => selectedZoneIds.includes(zone.id))
+  const addableZones = REGION_OPTIONS.filter(zone => !selectedZoneIds.includes(zone.id))
+  const effectiveReferenceCity = activeZones.some(zone => zone.city === referenceCity)
+    ? referenceCity
+    : (activeZones[0]?.city ?? 'Beijing')
+  const orderedActiveZones = [
+    ...activeZones.filter(zone => zone.city === effectiveReferenceCity),
+    ...activeZones.filter(zone => zone.city !== effectiveReferenceCity),
+  ]
+  const effectivePendingZoneId = addableZones.some(zone => zone.id === pendingZoneId)
+    ? pendingZoneId
+    : (addableZones[0]?.id ?? '')
+
+  const addZone = () => {
+    if (!effectivePendingZoneId) return
+    setSelectedZoneIds(current => (current.includes(effectivePendingZoneId) ? current : [...current, effectivePendingZoneId]))
+  }
+
+  const removeZone = (zoneId: string) => {
+    setSelectedZoneIds(current => current.filter(id => id !== zoneId))
+  }
+
+  const results = date ? orderedActiveZones.map(({ id, city, timezone }) => {
+    const t = normalizeTimeInZone(date, timezone, city)
     const baziDate = getBaZiDate(t)
     const shichen = getShichen(t.hour)
     const lunar = computeLunar(baziDate, t)
-    return { label, t, shichen, lunar }
+    return { id, label: city, t, shichen, lunar }
   }) : null
 
-  const reference = results?.find(result => result.label === referenceCity) ?? results?.[0]
+  const reference = results?.find(result => result.label === effectiveReferenceCity) ?? results?.[0]
 
   const compared = results?.map(result => {
     const timeOffsetHours = reference ? result.t.tzOffset - reference.t.tzOffset : 0
@@ -132,14 +151,53 @@ export default function ComparePage() {
                 onChange={e => setReferenceCity(e.target.value)}
                 className="mt-2 w-full cursor-pointer bg-white border border-[#D4D4D4] px-4 py-2.5 text-sm text-[#1A1A1A] outline-none transition-colors focus:border-[#1A1A1A]"
               >
-                {ZONES.map(zone => (
-                  <option key={zone.label} value={zone.label}>
-                    {getLocalizedCity(language, zone.label)}
+                {orderedActiveZones.map(zone => (
+                  <option key={zone.city} value={zone.city}>
+                    {getLocalizedCity(language, zone.city)}
                   </option>
                 ))}
               </select>
             </div>
+            <div>
+              <Label>{tr(language, 'Add Region', '添加地区')}</Label>
+              <div className="mt-2 flex gap-2">
+                <SearchableRegionSelect
+                  options={addableZones}
+                  value={effectivePendingZoneId}
+                  onChange={setPendingZoneId}
+                  className="min-w-0 flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={addZone}
+                  disabled={addableZones.length === 0}
+                  className="cursor-pointer border border-[#D4D4D4] bg-white px-4 py-2.5 text-[10px] uppercase tracking-[0.18em] text-[#777777] transition-colors hover:border-[#1A1A1A] hover:bg-[#F7F3EE] hover:text-[#1A1A1A] disabled:cursor-default disabled:opacity-40"
+                >
+                  {tr(language, 'Add', '添加')}
+                </button>
+              </div>
+            </div>
           </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {orderedActiveZones.map(zone => (
+            <div
+              key={zone.id}
+              className="flex items-center gap-2 border border-[#D4D4D4] bg-white px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-[#777777] transition-colors hover:border-[#B9B0A7] hover:bg-[#FBFAF8] hover:text-[#1A1A1A]"
+            >
+              <span>{formatRegionOption(language, zone.country, zone.city)}</span>
+              <button
+                type="button"
+                onClick={() => removeZone(zone.id)}
+                disabled={selectedZoneIds.length <= 1 || zone.city === effectiveReferenceCity}
+                className="inline-flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border border-transparent p-0 text-[11px] leading-none text-[#8A8178] transition-colors hover:border-[#D4CCC3] hover:bg-white hover:text-[#1A1A1A] disabled:cursor-not-allowed disabled:opacity-20"
+                aria-label={tr(language, `Remove ${zone.city}`, `删除${getLocalizedCity(language, zone.city)}`)}
+              >
+                ×
+              </button>
+            </div>
+          ))}
         </div>
 
         {compared ? (
@@ -179,7 +237,7 @@ export default function ComparePage() {
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               {compared.map(result => (
                 <div
-                  key={result.label}
+                  key={result.id}
                   className={[
                     'border bg-white p-5 transition-colors',
                     result.isReference ? 'border-[#1A1A1A]' : 'border-[#D4D4D4]',
@@ -292,10 +350,7 @@ export default function ComparePage() {
                       <div className="border border-[#ECE7E0] bg-[#FBFAF8] p-4">
                         <Label>{tr(language, 'Current Shichen', '当前时辰')}</Label>
                         <div className="mt-3 font-serif-display text-[2rem] leading-none text-[#1A1A1A]">
-                          {result.shichen.branch}
-                        </div>
-                        <div className="mt-1 text-[10px] tracking-[0.16em] uppercase text-[#777777]">
-                          {getShichenRuleLabel(result.shichen)}
+                          {result.shichen.branch}{result.shichen.number}
                         </div>
                         <div className="mt-3 text-[10px] tracking-[0.12em] text-[#777777]">
                           {getShichenRange(result.shichen)}

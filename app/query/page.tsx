@@ -1,27 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import SearchableRegionSelect from '@/components/SearchableRegionSelect'
 import TermInfoButton from '@/components/TermInfoButton'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { t as tr } from '@/lib/i18n'
-import { formatRegionOption } from '@/lib/locations'
+import { REGION_OPTIONS } from '@/lib/regions'
 import { parseDatetimeLocal, normalizeTimeInZone, formatGregorianDate, formatTime } from '@/lib/time'
 import { getBaZiDate } from '@/lib/rules'
 import { getShichen, getShichenAnimal, getShichenDescription, getShichenDisplayName, getShichenRange, getShichenRuleLabel } from '@/lib/shichen'
 import { computeLunar } from '@/lib/lunar'
-
-const REGION_OPTIONS = [
-  { id: 'london', city: 'London', country: 'United Kingdom', timezone: 'Europe/London' },
-  { id: 'beijing', city: 'Beijing', country: 'China', timezone: 'Asia/Shanghai' },
-  { id: 'new-york', city: 'New York', country: 'United States', timezone: 'America/New_York' },
-  { id: 'san-francisco', city: 'San Francisco', country: 'United States', timezone: 'America/Los_Angeles' },
-  { id: 'paris', city: 'Paris', country: 'France', timezone: 'Europe/Paris' },
-  { id: 'helsinki', city: 'Helsinki', country: 'Finland', timezone: 'Europe/Helsinki' },
-  { id: 'amsterdam', city: 'Amsterdam', country: 'Netherlands', timezone: 'Europe/Amsterdam' },
-  { id: 'tokyo', city: 'Tokyo', country: 'Japan', timezone: 'Asia/Tokyo' },
-  { id: 'singapore', city: 'Singapore', country: 'Singapore', timezone: 'Asia/Singapore' },
-  { id: 'sydney', city: 'Sydney', country: 'Australia', timezone: 'Australia/Sydney' },
-]
 
 function toDatetimeLocal(date: Date): string {
   const p = (n: number) => String(n).padStart(2, '0')
@@ -74,17 +62,12 @@ export default function QueryPage() {
                 {tr(language, 'Reset', '重置')}
               </button>
             </div>
-            <select
+            <SearchableRegionSelect
+              options={REGION_OPTIONS}
               value={regionId}
-              onChange={e => setRegionId(e.target.value)}
-              className="mt-3 w-full bg-white border border-[#D4D4D4] text-[#1A1A1A] px-4 py-2.5 text-sm uppercase tracking-[0.12em] focus:outline-none focus:border-[#1A1A1A] transition-colors"
-            >
-              {REGION_OPTIONS.map(region => (
-                <option key={region.id} value={region.id}>
-                  {formatRegionOption(language, region.country, region.city)}
-                </option>
-              ))}
-            </select>
+              onChange={setRegionId}
+              className="mt-3"
+            />
           </div>
         </div>
 

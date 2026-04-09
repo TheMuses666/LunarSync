@@ -20,3 +20,25 @@ body {
 .font-serif-display {
   font-family: Georgia, 'Times New Roman', serif;
 }
+
+@keyframes term-modal-overlay-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes term-modal-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

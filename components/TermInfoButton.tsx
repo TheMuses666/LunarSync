@@ -48,10 +48,12 @@ export default function TermInfoButton({
       {open && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(16,16,16,0.28)] px-6 py-8 backdrop-blur-[2px]"
+          style={{ animation: 'term-modal-overlay-in 180ms ease-out' }}
           onClick={() => setOpen(false)}
         >
           <div
             className="w-full max-w-2xl overflow-hidden border border-[#D8D8D8] bg-[#FFFEFC] shadow-[0_24px_80px_rgba(0,0,0,0.14)]"
+            style={{ animation: 'term-modal-panel-in 220ms cubic-bezier(0.22, 1, 0.36, 1)' }}
             onClick={event => event.stopPropagation()}
           >
             <div className="border-b border-[#ECE7E0] px-7 py-5">

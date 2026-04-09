@@ -41,15 +41,33 @@ interface ShichenClockProps {
   minute: number
   second: number
   shichen: Shichen
+  interactiveShichen?: Shichen
+  onHoverShichen?: (shichen: Shichen | null) => void
+  onSelectShichen?: (shichen: Shichen) => void
 }
 
 function formatBoundaryHour(hour: number) {
   return `${String(hour).padStart(2, '0')}:00`
 }
 
-export default function ShichenClock({ hour, minute, second, shichen }: ShichenClockProps) {
+export default function ShichenClock({
+  hour,
+  minute,
+  second,
+  shichen,
+  interactiveShichen,
+  onHoverShichen,
+  onSelectShichen,
+}: ShichenClockProps) {
   const hand = hourToXY(hour, minute + second / 60, R_HAND)
-  const activeBoundaryHours = new Set([shichen.startHour, shichen.endHour])
+  const hoveredShichen = interactiveShichen && interactiveShichen.index !== shichen.index
+    ? interactiveShichen
+    : null
+  const activeBoundaryHours = new Set([
+    shichen.startHour,
+    shichen.endHour,
+    ...(hoveredShichen ? [hoveredShichen.startHour, hoveredShichen.endHour] : []),
+  ])
 
   return (
     <svg viewBox="0 0 320 320" className="h-[360px] w-[360px] select-none">
@@ -69,7 +87,17 @@ export default function ShichenClock({ hour, minute, second, shichen }: ShichenC
         d={pieSectorPath(shichen.startHour, shichen.endHour, R_SECTOR)}
         fill="#B7B7B7"
         opacity="0.9"
+        className="transition-all duration-200"
       />
+
+      {hoveredShichen && (
+        <path
+          d={pieSectorPath(hoveredShichen.startHour, hoveredShichen.endHour, R_SECTOR)}
+          fill="#D8D8D8"
+          opacity="0.95"
+          className="transition-all duration-200"
+        />
+      )}
 
       {SHICHEN_BOUNDARIES.map(h => {
         const outer = hourToXY(h, 0, R_TICK_OUT)
@@ -112,20 +140,33 @@ export default function ShichenClock({ hour, minute, second, shichen }: ShichenC
           ? 0 // 子时 midpoint is midnight (0)
           : (s.startHour + s.endHour) / 2
         const pos = hourToXY(midH, 0, R_BRANCH_CHAR)
-        const isActive = s.index === shichen.index
+        const isCurrent = s.index === shichen.index
+        const isHovered = s.index === hoveredShichen?.index
         return (
           <text
             key={s.branch}
             x={pos.x.toFixed(2)} y={pos.y.toFixed(2)}
             textAnchor="middle" dominantBaseline="middle"
-            fontSize={isActive ? '17' : '13'}
-            fill={isActive ? '#1A1A1A' : '#B1B1B1'}
-            fontWeight={isActive ? '600' : '400'}
+            fontSize={isCurrent ? '17' : isHovered ? '15' : '13'}
+            fill={isCurrent ? '#1A1A1A' : isHovered ? '#5E5E5E' : '#B1B1B1'}
+            fontWeight={isCurrent ? '600' : isHovered ? '500' : '400'}
           >
             {s.branch}
           </text>
         )
       })}
+
+      {SHICHEN_LIST.map(s => (
+        <path
+          key={`hit-${s.branch}`}
+          d={pieSectorPath(s.startHour, s.endHour, R_OUTER)}
+          fill="transparent"
+          className="cursor-pointer"
+          onMouseEnter={() => onHoverShichen?.(s)}
+          onMouseLeave={() => onHoverShichen?.(null)}
+          onClick={() => onSelectShichen?.(s)}
+        />
+      ))}
 
       <circle cx={CX} cy={CY} r={R_OUTER} fill="none" stroke="#D0D0D0" strokeWidth="1" />
 
