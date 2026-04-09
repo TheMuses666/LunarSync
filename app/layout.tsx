@@ -3,6 +3,7 @@ import './globals.css'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { ModeProvider } from '@/contexts/ModeContext'
 import HeaderNav from '@/components/HeaderNav'
+import { Analytics } from '@vercel/analytics/next'
 
 export const metadata: Metadata = {
   title: 'LunarSync — Observatory',
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
           </ModeProvider>
         </LanguageProvider>
+        <Analytics />
       </body>
     </html>
   )
